@@ -1,0 +1,453 @@
+This document outlines steps/instructions to complete striatum NMF processing as well as location of necessary files (on the CIC)
+
+HCP Data Access:  The Human Connectome Project requires anyone working with HCP data to create an account.  Follow the Register link at https://db.humanconnectome.org/app/template/Login.vm;jsessionid=B8C223D127B817592AFA7D8ADB78268A
+
+Demographics:  The following .csv file contains subject id and demographic/cognitive data for the 329 subjects you are working with:
+/data/chamal/projects/raihaan/projects/i nprogress/hc-nmf-micro/raw_data/sheets/df_sorted_unrestricted_329.csv
+https://wiki.humanconnectome.org/display/PublicData/HCP+Data+Dictionary+Public-+Updated+for+the+1200+Subject+Release contains info on the variables in this spreadsheet
+
+1. Get native and warped structural and diffusion data
+‘Native’ refers to an image/subjects native image space, while warped refers to the population average coordinate space.
+
+Some of the scripts require a certain folder organization, with 1 folder for each subject.  Check out /data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/preprocessed/329subject_singleshellNMF/native as an example
+
+In your preprocessed directory, create a ‘native’ and ‘warped’ folder, and link the contents of 
+/data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/preprocessed/329subject_singleshellNMF/native to native.  These files are the native space diffusion weighted imaging maps of interest (MD, FA)
+
+You can also link the contents of 
+/data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/preprocessed/329subject_singleshellNMF/warped to your warped directory, although you won’t need all of these files.  The following pertain specifically to hippocampus data, so they won’t be of interest to you:
+lefthc_correctedt1t2.nii.gz  
+majvote_hccorrected_label.nii.gz  
+righthc_correctedt1t2.nii.gz
+
+Instead, grab the warped t1t2 data from:
+/data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/preprocessed/329subject_singleshellNMF/warped/$subject/t1t2_warped_thresh.nii.gz
+
+Eg, link /data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/preprocessed/329subject_singleshellNMF/warped/100206/t1t2_warped_thresh.nii.gz
+To your warped/100206 folder
+
+
+2. Get native space striatum labels
+Striatum labels (processed by Nadia) for all HCP subjects are at /data/chamal/projects/nadia/subcortical_heritability/derivatives/str/str_{left, right}/{batch1, batch2}/labels
+Note that the left and right labels are separated into diff files
+QC scores at /data/chamal/projects/nadia/subcortical_heritability/derivatives/str/str_QC.csv
+For each subject, create a link in their native/ folder to their left and right striatum labels
+Note that there are labels for more than the 329 subjects you are working with. You can extract the first column from the demographic .csv to get a list of the subject IDs of interest if that helps
+
+Native space T1 images: /data/chamal/projects/nadia/subcortical_heritability/derivatives/subj_brains_batch{1.2}
+If you like, you can use Display to look at the images in the above folder with the native space labels to get an idea of what is rated a perfect (1) vs fail QC score
+
+3. Convert .mnc label files to .nii.gz (and learn job submission)
+The rest of the NMF analysis is more suited to working with .nii files, so convert the .mnc striatum label files to nifti format.  For each label file, this involves the following steps:
+#load required software package
+> module load minc-toolkit
+#convert labels
+> mincreshape -normalize -unsigned -byte -image_range 0 255 -valid_range 0 255 HCP_100206_t1_labels.mnc HCP_100206_t1_labels_fix.mnc
+> mnc2nii HCP_t1_100206_labels_fix.mnc HCP_100206_t1_labels_fix.nii
+> gzip HCP_t1_100206_labels_fix.nii
+
+Try working out a for loop to carry out the above commands for each subjects striatum label files.  For this type of task (run the same command(s), just changing the input/output file specification), it is helpful to use a for loop and ‘echo’ the commands into a ‘joblist’.  A couple useful bash things if you aren’t familiar with them yet are:
+ echo
+ dirname
+ basename
+
+Look them up to see what they can be used for.
+
+Eg, from your native/ folder,
+> for file in */*labels.mnc; do echo mincreshape -normalize -unsigned -byte -image_range 0 255 -valid_range 0 255 $file $(dirname $file)$(basename $file .mnc)_fix.mnc; done
+
+The above loop will output the mincreshape command for each label file to the screen.  This is useful for checking that the command is what you expect it to look like.  Then, 
+> for file in */*labels.mnc; do echo mincreshape -normalize -unsigned -byte -image_range 0 255 -valid_range 0 255 $file $(dirname $file)$(basename $file .mnc)_fix.mnc; done > cmds_mincreshape
+
+Will create a file called cmds_mincreshape, which contains all those same commands previously output to the screen. Experiment with the above to see what happens, that will probably help more than this text explanation.  This cmds_mincreshape file is what i would refer to as a ‘joblist’ - a file with a list of commands, like a to do list essentially.  Note the name of the file is completely arbitrary, you could have done 
+> for file in */*labels.mnc; do echo mincreshape -normalize -unsigned -byte -image_range 0 255 -valid_range 0 255 $file $(dirname $file)$(basename $file .mnc)_fix.mnc; done > myfile
+
+And the contents would be the same, the name is just different.  Having a joblist when you have many commands to execute is useful for a few reasons:
+1) it acts as a history of what commands you executed
+2) You can use the joblist to run commands in parallel, either locally or using a cluster.  ‘Parallel’ here refers to having multiple commands run at the same time, as opposed to one at a time (Serially)
+
+Running commands in parallel locally:
+> parallel -j6 < cmds_mincreshape
+This command would take the contents of cmds_mincreshape, under the assumption that each line contains one command, and execute them 6 at a time.  
+
+Submitting jobs to the CIC cluster:
+Instead of running commands locally (on cicws09), you can submit them to the compute cluster at  the cic, using the qbatch command (https://github.com/CoBrALab/documentation/wiki/Compute-Cluster-at-the-Douglas-CIC)
+Eg
+> module load qbatch
+> qbatch -N myjobs -w 00:30:00 -c 10 cmds_mincreshape
+In the above command,
+-N specifies job name, this is optional
+-w specifies the expected runtime of your jobs, in hh:mm:ss
+-c specifies the ‘chunksize’ - this is an important parameter that determines how many of your commands get grouped together in one job.  As an example, if cmds_mincreshape has 300 commands, and you specify -c 10, you will end up with 30 jobs, each running 10 commands (njobs = ncommands/chunksize, more generally).  
+
+All these decisions on how to run jobs end up being important in how quickly your processing gets done, so its good to get a handle on the tradeoffs.
+
+
+4. Warp/transform striatum labels to modelspace
+Using previously generated transformation files, transform the native space striatum labels of each subject to model space.  The ‘model’ in this case is a previously generated group average of the 329 subjects.  This processing was done at /data/chamal/projects/raihaan/HCP/HCP900/group-avg/900-t1-t2/ if you want to take a look (heads up that there are lots of files in that directory, so ls takes a few seconds usually)
+
+Model/Group average is at /data/chamal/projects/raihaan/HCP/HCP900/group-avg/900-t1-t2/HCPunrelated_template0.nii.gz
+
+Grab a copy of it and place it in your folders (in warped/ is a good idea, or you could create a link in each of the warped/subject folders, whichever you prefer - read through the rest of this step then decide).  You can visualize it using Display, eg:
+> module load minc-toolkit
+> Display HCPunrelated_template0.nii.gz
+
+To warp/apply a transform, you typically need:
+a) an input file - the file you want to transform to another space
+b) a reference file - a file providing the target coordinate space, can think of this as the ‘target’, you are warping the input file to the reference file
+c) transform files - these describe the linear and nonlinear transformations required for the operation
+
+Transform files are in /data/chamal/projects/raihaan/HCP/HCP900/group-avg/900-t1-t2/
+For each of your subjects, you will need the file ending in Warp.nii.gz, and the file ending in GenericAffine.mat.  Note there are actually two files ending in Warp.nii.gz, you don’t want the inverse.  Try 
+> ls  /data/chamal/projects/raihaan/HCP/HCP900/group-avg/900-t1-t2/*100206*
+To see the files corresponding to subject 100206, and you’ll see that for subject 100206 there is /data/chamal/projects/raihaan/HCP/HCP900/group-avg/900-t1-t2/HCPunrelated_100206_t1_crop01Warp.nii.gz and /data/chamal/projects/raihaan/HCP/HCP900/group-avg/900-t1-t2/HCPunrelated_100206_t1_crop00GenericAffine.mat
+
+The command you need to run to warp each label would look like this:
+
+antsApplyTransforms -d 3 -i native/100206/100206_label.nii.gz -r HCPunrelated_template0.nii.gz -o warped/100206/100206_label.warped.nii.gz -n GenericLabel -t /data/chamal/projects/raihaan/HCP/HCP900/group-avg/900-t1-t2/HCPunrelated_100206_t1_crop01Warp.nii.gz -t /data/chamal/projects/raihaan/HCP/HCP900/group-avg/900-t1-t2/HCPunrelated_100206_t1_crop00GenericAffine.mat
+
+Where native/100206/100206_label.nii.gz is the nifti label file you previously converted.  Try working out a for loop to create a job list that runs the antsApplyTransforms command for each of the left and right labels, for all subjects (should work out to 2*numberofsubjects commands). Pay extra attention to the transform files - you don’t want to be referencing the InverseWarp.nii.gz files at all
+
+Submitting transform jobs: Once you have your joblist, something like the following should work, but read on a bit before submitting 
+ qbatch -c 5 --ppj 2 -w 1:00:00 transform_joblist
+
+You’ll note in the above there is another option, --ppj.  This stand for processors per job - it specifies the number of CPUs requested by each of your jobs.  By default this is 1, but you may want to request more ppj for commands that use more memory.  At the CIC, each CPU has approx 1.75GB of RAM, so --ppj 2 allocated 3GB per job.  Before submitting, test run one of your antsApplyTransform jobs locally, but prepend the command with ‘/usr/bin/time -v’ (copy the first line from your joblist, paste into terminal, press enter), eg:
+> module load ANTs
+> /usr/bin/time -v antsApplyTransforms …….
+
+The /usr/bin/time -v is a tool in most linux systems that allows you to run a given command, and afterwards it will output some processing statistics - eg how much time used, how much memory used. When unsure how long a command takes/how much memory it uses, you can use this to test and get a measurement.  This can help inform qbatch options like -c, -w, --ppj. Eg if the command uses 2GB, you would need --ppj 2.
+
+
+5. Fuse transformed labels
+At this point, you have 329 left/right striatum labels registered/transformed to your group average template space.  The next step is to combine these labels into one, essentially averaging together.  The most straightforward way to do this is though a ‘majority vote’, which is what it sounds like - for each voxel, assess what the label value (eg striatum or background) is in the majority of the 329 files, and output a ‘final answer’ for each voxel in this way.
+
+You can use the ImageMath command to run this computation (since you have separate files for left and right, run it separately for each)
+> module load ANTs
+> ImageMath 3 majority_voted_label.nii.gz MajorityVoting *candidatelabels*
+
+See the command in /data/chamal/projects/raihaan/HCP/HCP900/group-avg/900-t1-t2/300-unrl/warped_updatedhc/fuse_all_hclabel for example - important point here is to only include files that passed quality control in the majority voting.  This way, you’re averaging/voting across data/segmentations that have been deemed to be accurate.  Recall qc scores were done by Nadia, at /data/chamal/projects/nadia/subcortical_heritability/derivatives/str/str_QC.csv.  For this step, only include labels with a score of 1 (perfect) in the majority vote.
+
+For file organization purposes, arrange it such that there is a majority voted label in each of your warped/$subject folders.  If you refer back to step 1) where you linked previously processed warped data to your folders, the output majority vote label from the command above that you create for the striatum is replacing the majvote_hccorrected_label.nii.gz 
+
+Run this command locally, instead of submitting to the cluster.  You could (should) still create a joblist containing the command, which will help keep a history of the command you run.  But instead of using qbatch, try the following:
+> module load ANTs
+> bash fuselabel_joblist
+
+Where fuselabel_joblist contains the ImageMath commands.  If you haven’t seen it before,
+>bash $file
+Simply executes commands in $file, line by line.  This step uses a large amount of memory, so instead of submitting to the cluster and hogging lots of CPUs, you can just run it locally and use all the RAM on cicws09.  If there were more than two ImageMath commands to run however, then it would be useful to submit to the cluster.
+
+6. Quality control the majority voted label
+Using Display, confirm the majority voted segmentations output from step 5 are as accurate as possible.  In particular, look for any oversegmentation of the dorsal striatum into the ventricle, as in the screenshot below.  This is the most common striatum qc failure
+
+For reference, in the screenshot below of the same slice/image/label, ive labelled voxels i would say are oversegmented into the ventricle in green
+
+
+
+If necessary, you may have to manually adjusted the majority voted labels. We can inspect the majority voted labels together to decide if this is necessary.  If necessary, this would need to be done before proceeding.
+
+7. Filter T1/T2 data 
+T1/T2 data can have abnormal outlier values. Filter these out by replacing them with the mean of their neighbourhood.  Use the steps described in https://github.com/CoBrALab/documentation/wiki/T1w-T2w-Ratio#2-extracting-the-t1wt2w-values-for-subcortical-structures (skip to the step about extracting the t1/t2 val, you don’t need to create the t1/t2 image) and the fused label you created in step 4 above
+
+8. Extract warped T1/T2, MD, FA data to build input matrix
+This step uses python.  The idea is to build the input matrix for NMF.  Conceptually, this is like:
+For each subject:
+	Open T1T2 image
+	Open label
+	Overlay label with t1t2 image to identify voxels of interest
+	Extract t1t2 value in each voxel of interest, store in an array
+	Stack array with arrays of other subjects to create matrix
+
+There is a toolkit written by a previous lab member (Christopher Steele) that is built to interact between python and nifti images - essentially loading nifti images to python matrices, and writing from python to a nifti image.  The scripts in this step use this toolkit.  Grab a copy of the folder below which contains script from this toolkit and store it somewhere in your folders:
+
+> cp -r /data/chamal/projects/raihaan/HCP/HCP900/scripts/TractREC/working/TractREC/TractREC/ /path/on/your/folders
+
+Replacing /path/on/your/folders with where you want to store it
+
+The scripts in /data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/analysis/329subject_singleshellNMF/extract_metrics 
+are written to extract data to build the nmf matrix.  You’ll see there is one script for each combo of left/right and t1t2/md/fa.  I’ve copied one of them to create a template, and added comments highlighting whats happening as well as where you need to make edits.  Most of the edits are at this point repointing to paths where your data is (ie load from your files instead of mine) and where you want to output files (ie save data in your folder not mine)
+
+
+Copy 
+/data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/analysis/329subject_singleshellNMF/extract_metrics/sample_get_t1t2_pca329_left.py
+
+ to an appropriate folder for you and edit the lines specified to point to the files you’ve created for the striatum.  Note that they should be pointing to the files in warped/, not native/.  The TractREC tools expect certain files to be located within each subjects folder.  EAch subject folder/ in warped should already have its own md, fa, t1t2 file.  Make sure there is a copy of the majority voted label in each folder as well (Even though they will just be copies of each other).
+
+As an aside, to get more familiar with python you could also try the following:
+Edit the template script so that it points to appropriate paths
+Copy the script to your laptop
+Copy the necessary files for a handful of subjects (eg for 5 subjects, copy their warped folder to your laptop. You can do more than 5 though not necessary)
+Create a jupyter notebook (https://jupyter.org/), copy pasting each line/chunk of code into a cell and running it, then experiment with the outputs 
+Try to get a handle on: numpy arrays, lists, matrices, the output of the tract rec tool, python for loops
+
+Jupyter notebook is an interactive tool that you can open in your browser and then run code in it in ‘cells’ ie chunks of code.  So instead of running the full script, you can run it line by line, then stop along the way to check outputs of each step.  It is very useful for testing/building scripts.  
+
+When ready, the script can be run as follows:
+> module load anaconda #load python
+> python script.py
+
+Where script.py is the modified python script
+
+It will take some time to run (perhaps 20-30 minutes).  Once completed, check if the expected output file exists.  As a confirmation, as well as to get used to python, copy the .mat file created to your laptop.  Try creating a jupyter notebook and loading the .mat file.  Check its dimensions (see numpy size or shape functions), and then plot it (hint: look up numpy and matplotlib libraries, scipy for loading a .mat file, and the imshow function for plotting a heatmap)
+
+9. Run opNMF
+Using the .mat files from step 8 as input, run opNMF to get output components of the striatum microstructure data.  The opNMF script is written in matlab, is called opnmf_mem_cobra and is located in the folder
+
+/data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/analysis/329subjectNMF/pnmf/brainlets
+
+Copy this folder to an appropriate location in your folder so that you have your own copy of the scripts.  
+
+The script below is a sample of how you could run opnmf, with comments added in places you will need to modify paths.  Grab a copy and edit to point to the necessary files:
+/data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/analysis/329subject_singleshellNMF/sample_run_pnmf.m
+
+Try running the script with 4 or 5 components as a first step to try and get things running.  You will need to load matlab.  Run it locally to begin, it will take some time (~30 mins maybe), so a screen session would be a good idea.  You can run the script from the command line, instead of opening up matlab and running the script as this would be difficult over ssh.
+> module load matlab/R2016a
+> matlab -nodisplay -nosplash -nodesktop -r "run('sample_run_pnmf.m');exit;"
+
+10. Convert opnmf results to nifti labels
+After running opnmf, you now have a W matrix that is dimensions n_voxels X n_components.  Of immediate interest is visualizing the patterns - which voxels cluster together?  To do this, you will need to map the W matrix to nifti files.  Each column of W is a component, so you can create an output nifti file for each column, where voxels contain the component score of a given voxel.  On top of that (or in place of that), you can also cluster W, to create one array with dimensions n_voxels, and each value corresponds to the cluster label of a given voxel.  Then that can be mapped to a nifti file.  If you ran a 5 component nmf, values will range from 1 to 5, and you can look at this using Display.  
+
+The script below contains sample code for loading in nmf results and writing out a label.  Modify as noted in the comments
+
+/data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/analysis/329subject_singleshellNMF/topython/sample_nmf_to_nii.py
+
+If you output a file called clusters.nii.gz, you can then visualize it as follows:
+Display HCPunrelated_template0.nii.gz -label clusters.nii.gz
+
+mango11. Create 3d model of output clusters
+This step can wait until you have run stability analysis and identified the optimal # of clusters if you prefer.  Or you can do it now to check out pretty pictures of the 4 cluster solution.  You just may have to repeat it for a diff number
+Create 3d surfaces of the output clusters using mango.  Mango is available at the CIC, so try this over x2go.  It should work ok, but let me know if there are any graphics issues.
+https://github.com/CoBrALab/documentation/wiki/Create-3D-surfaces-using-Mango
+
+12. Stability analysis - create input matrices
+To select the optimal # of components, a stability analysis needs to be run to assess accuracy and spatial stability at each granularity.  To do this, you need to create 10 splits of data.  In each split, subjects are put into one of two groups, and group size is kept as equal as possible (n=164, 165 for the two groups).  The groups should also be stratified by age - ie one group should not be drastically older or younger than the other.  This will lead to the creation of 10 pairs of input matrices - a total of 20.  The input matrices will have the same number of rows as the full input matrix, but approx half the columns (half the subjects).  
+
+Try creating the 10 splits and the resulting input matrices and save them to .mat files.  For stratifying by age, check out the StratifiedShuffleSplit tool in sklearn.  An important technicality is that the z scoring and shifting should occur separately within each input matrix.
+
+Eg 
+Get splits - ie get the subjects/columns in each of the two groups (hint: think of this as getting the column indices required, eg 
+> groupAindices = [0, 2, 5,6,7], groupBindices = [1,3,4,8,9,10]
+
+Load raw t1t2, fa, md
+Create matrices containing the t1t2, fa, md for each group,
+> t1t2A = t1t2raw[:,groupAindices]; faA = faraw[:,groupAindices] … repeat for md
+
+Zscore each of the A matrices (eg zscore t1t2A, zscore mdA, zscore faA), concatenate, then shift.  Repeat for B matrices (zscore t1t2B…..), concatenate, shift
+
+Save the split, preprocessed matrices to .mat files, as nmf will need to be run on ech of them.  There should be 20 total.
+
+
+3 13. Run opnmf for each of the 20 stability inputs
+For each of the input matrices created in step 12, run nmf and save the outputs.  You will need to create a job list, with commands that run nmf for each of 2 to 10 components, for each of the 20 input matrices.  In step 9, I linked to a sample matlab script which runs nmf with a hardcoded input and output file.  For this step, it would be ideal to make a joblist instead where you can specify the input and output file names.  Check the following file for how to edit your nmf .m script to enable this:
+
+/data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/analysis/329subject_singleshellNMF/stability/n10/run_pnmf_par.m
+
+Edit the addpath line as you did before.  But you’ll note in the file above its loading the variable ‘micro’ and saving to the variable ‘outfile’.  Also, the variable ‘k’ defines the # of components.  When running matlab scripts from the command line, you can define variables before running the script.  Eg:
+
+matlab -nodisplay -nodesktop -nosplash -r "micro='../../stability_splits/n10/leftA_0.mat';outfile='pnmf_out/k2/leftA_0_res.mat';k=2;run_pnmf_par;exit"
+
+Will load in a specific .mat file as input, specifies k=2, and specifies an output file.  Using the syntax of the run_pnmf_par.m script, create a joblist to run nmf for your stability analysis.  2 to 10 components, pseudo code for this would be:
+
+For k in (2 to 10)
+	For input in *stabilitysplitfiles.mat
+		Run_pnmf_par, micro = input, k=2, output = outputfolder/$(basename $input .mat)_results.mat
+
+Change the output file name to however you like, but this should work out to 180 commands for the left, and 180 for the right (2 to 10 components = 9 diff granularities * 20 input matrices).  To submit jobs to the cluster, do the following:
+
+> module load matlab/R2016a
+> module load qbatch
+> qbatch --options '-l matlab=1' --options ' -R y' --ppj 6 -w TIME joblist
+
+Replace TIME with an appropriate walltime (cant remember what this would be, test one job to check but be conservative and keep in mind a k=10 run will take longer than k=2) the -l  matlab option is specifying to use 1 ‘license’ for each job. Matlab costs money, and our license only enables 16 instances of matlab to be running at a time, so this option helps keep track of that. If you had 16 jobs running, and a 17th tried to start, it would fail.  The -R option has to do with reserving space on cluster machines.  I checked with Gabe and its likely unnecessary now due to upgrades, but leaving it in just in case.
+
+13.1 Running opNMF jobs on Niagara
+
+The sample script on niagara can be copied to run opnmf on niagara using octave:
+/home/m/mchakrav/patelmo6/scratch/HCP/hc-nmf-func/analysis/bin/sample_run_pnmf_oct
+
+You’ll see that the script takes in 3 arguments in order - input matrix, k, output filename
+
+Modules needed for octave on niagara are:
+> module load gcc/7.3.0 mkl/2018.2 octave/4.4.0 gnu-parallel qbatch
+
+On Niagara, you can make a joblist and submit using qbatch.  Niagara has ‘nodes’ and each node has 40 CPUs.  When you submit jobs, each job gets (at least) 1 node - which means each job has 40 CPUs available to it.  This changes how you may want to ‘chunk’ jobs.  While -c 1 may have made sense at the CIC, now -c 1 is assigning 40 CPUs and ~200GB of RAM (lots) to one job, so typically it will make more sense to have chunksize of 20-40.
+
+An exception I’ve run into is with octave opnmf, which does not have parallel capabilities like matlab (no parpool that i know of ).  In my testing I’ve actually found it runs faster in serial (one at a time).  You can adjust this using the -j option in qbatch.  -j tells qbatch how many commands to run in parallel.
+
+Eg 
+a) qbatch -c 20 -j 10
+b) qbatch -c 20 -j 1
+
+In a, 10 jobs will run at once, so two ‘cycles’ are needed. In b, 1 job will run at a time so 20 ‘cycles’ are needed.  So to run opnmf jobs I suggest something like
+
+qbatch -c ? -w ? -j 1 joblist
+
+ Chunksize and walltime will depend on how long 1 nmf job takes on Niagara (expect this to be different than on the cic). On Niagara, many small jobs (<1 hr walltime) is preferable to 1 large job (>4 hr walltime).  So if you have 180 jobs and each takes 10 minutes, something like 
+
+> qbatch -c 5 -w 1:30:00 -j1 joblist
+
+May make sense, which would submit 36 jobs. There is no rule of ‘jobs must be less than 1 hour’ or anything, just keep that principle in mind when organizing.
+
+To test jobs on niagara, you can make use of the debug nodes.  For this, instead of using qbatch you can make a job script and submit with sbatch.  
+
+/home/m/mchakrav/patelmo6/scratch/HCP/hc-nmf-func/analysis/dyn/run_pnmf/sample_debug.sh is a script that is formatted to be submitted, using sbatch, to the debug nodes.  The first few lines (#SBATCH) are options - adjust the two options specifying paths to point to your folders.  AFter that you’ll notice that the module load commands are embedded in the script - this is because when submitting jobs like this through sbatch they do not be default ‘inherit’ the environment from which they are submitted (ie module load doesnt transfer). Replace the #BUNCHOF OCTAVE COMMANDS bit with actual commands, and adjust the -j to whatever you like - this controls how many commands are run at once on the Niagara nodes.  You can then submit to the debug nodes like:
+
+> sbatch sample_debug.sh
+
+On niagara, you can check status of your jobs using squeue:
+
+> squeue -u username
+
+The above is analogous to using qstat at the CIC - another example of two commands doing the same thing on an sge vs slurm scheduling system
+
+
+14. Compute Stability and Reconstruction error gradient
+Now that you have computed the opnmf solutions for each split and across a range of granularites, you can track what spatial stability and the error look like at each granularity.  Say you have splits named like A_0,B_0,.....A_9,B_9, this works out to doing the following:
+
+For granularity 2 to 10
+For split in (0 to 9)
+	Wa = load W output from  A_0; Wb = load W output from B_0
+	#Wa and Wb have dimensions voxels X components. We want to ask how similar they are
+	CWa = correlation matrix of Wa; CWb = correlation matrix of Wb
+	#CWa has dimensions voxels X voxels, and CWa(i,j) tells us the correlation of #	component scores between voxels i and j - if this is high it means that these two voxels have similar component scores and are likely in the same cluster. So, CWa[i,:] ends up being a description of how similar the component scores are between voxels i and all other voxels -> Which voxels look like voxel i. And same thing for Cwb, but this time in data from the B split
+	compute correlation between each row of CWa with corresponding row in CWb
+	#this asks: Using split A, is voxel i similar to the same group of voxels as when using split B.  If this number is high (max of 1), it tells us that the component scores at this voxel are the same when using two different groups of subjects, and we conclude that the stability is high at this voxel.  High stability translates to - the patterns are consistent across all subjects
+	Take the mean of this correlation….average similarity of voxel i,j…...all voxels. 
+	#now we see, on average across all voxels, how similar are the component scores between the two groups of subjects
+
+Repeat for all splits
+Repeat for all granularities
+
+The following script is a sample with some comments which you can copy and adjust/repoint in necessary places (see lines with modify)
+/data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/analysis/329subject_singleshellNMF/stability/sample_pnmf_stability_n10_corr_left.py
+
+After everything is repointed to the correct paths, you can run it locally:
+> python sample_pnmf_stability_n10_corr_left.py
+If I recall it will take ~10 mins or so.  The output should be a .csv file (it is named on the last line of the script), with one row for each granularity/split pair.  The columns are granularity, split, then mean/median/stdev of various distance metrics, and the reconstruction error of split A and B.  The distance metric we will use is correlation, but I had experimented with others so they are tracked as well.  In the end they told the same thing really, but I thought correlation was most logical in terms of what it is that is being measured.  The correlation (Stability) and recon error are then plotted in the next step to inform choice of how many components to use.
+
+15. Plot Stability Results
+Goal of this step is to use the .csv file from step 14 to create a plot like the one below (Fig 3 from https://www.sciencedirect.com/science/article/pii/S1053811919309395#fig3)
+
+
+
+
+
+
+The stability coefficient here is the correlation from the spreadsheet, and the gradient of the reconstruction error is derived from the recon error columns in the spreadsheet.  See section 3.3 in https://www.sciencedirect.com/science/article/pii/S1053811919309395 for an interpretation.  My guess is your plot will look similar (red should decrease as components increase, vice versa for blue), but will not be identical.
+
+Copy the notebook 
+/data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/analysis/329subject_singleshellNMF/paper_figs/sample_stability_plotting.ipynb
+
+And use it to plot results. Modify paths as necessary, but other than that it should be able to create the plot given correct input.  Some comments in there to explain what is happening.  It is a bit complicated, everything before the #PLOT comment is what I came up with to extract the necessary info but there could be another (simpler) way. 
+
+
+  16. Make PLS spreadsheets
+
+The next step involves running a partial least squares (PLS) brain-behaviour analysis between the NMF weights (H matrix) from the selected granularity and the behavioural measures selected.  
+
+For a description of PLS, see the methods section in https://www.sciencedirect.com/science/article/pii/S1053811917310741
+
+As well as the description in https://www.sciencedirect.com/science/article/pii/S1053811910010074
+
+The two articles above overlap a bit, second provides a few more technical details and describes other variants of PLS as well.
+
+To do this analysis, you will need to spreadsheets:
+1. Brain variable spreadsheets - a spreadsheet with one row for each subject, and one column for each metric-component weight combination.  Eg, if 5 components are selected the spreadsheet should have 15 columns (5 components*3 metrics) - Comp1_T1T2, Comp1_MD, Comp1_FA, Comp2_T1T2, Comp2_MD……...Comp5MD, Comp5_FA
+
+2. Behaviour variable spreadsheet - a spreadsheet with one row for each subject and one column for each demographic/cognitive variable of interest.  
+
+It is important that the rows in the 2 spreadsheets correspond...ie if subject 100307 data is in row 2 of the brain variable spreadsheet, the row 2 of the behav spreadsheet should have that subjects data.  Back in step 8 you extracted imaging data to build the nmf matrices - an important detail here was that these scripts loaded the df_unrestricted spreadsheet and used the order of subjectIDs in that spreadsheet.  So, the nmf data throughout has maintained that order.  So column 1 of the H matrix will be the same subject as row 1 of the df_unrestriced spreadsheet the contains the behavioural data.
+
+To make the brain spreadsheet, load in the H matrix to python and you will have to do some manipulation.  The H matrix willl have dimensions # of components X n_subjects*3 (one column for each subject, for each metric).  The first chunk of columns (first 329 columns) are all subjects T1T2 weights in each component, second chunk is the same for MD, final chunk is same for FA.
+
+You’ll need to rearrange this to get a matrix where each row is a subject (row 1 should correspond to the first subject, ie column 1 in H), and each column is a weight, so that the columns end up being (using 5 comps as an example): Comp1_T1T2, Comp1_MD, Comp1_FA, Comp2_T1T2, Comp2_MD……...Comp5MD, Comp5_FA
+
+Note - this step would be easier if the columns are arrange Comp1_T1T2, Comp2_T1T2….Comp5_T1T2, Comp1_MD, Comp2_MD….Comp5_MD, 
+Comp1_FA, Comp2_FA….Comp5_FA, but this arrangement is less ideal for visualizing PLS results
+
+17. Run PLS
+The next step is to run PLS , using your brain and behav spreadsheets from step 16 as inputs.  PLS is run using matlab and can be run locally - no qbatch needed.
+
+Grab a copy of the sample pls script from 
+/data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/analysis/329subject_singleshellNMF/pls/4components_educ_noWM/sample_lefthc_runpls.m
+
+And modify as needed (see comments in sheet).  You’ll also see you have to copy a toolbox and point to the appropriate path.  The script is set up to read in brain and behav .csv files, run pls, and output a .mat file containing the results.
+
+PLS can be run on the CIC as follows
+> module load matlab/R2016a
+> matlab -nodisplay -nosplash -nodesktop -r "run('sample_lefthc_runpls.m');exit;"
+
+It will take ~10 minutes to run.  You’ll see some output being spit to the screen - alot of this is a count of the permutations and will just appear as lots of numbers.  At the end, pvalues of each latent variable will be printed to the screen.  Use this to decide how many latent variables to analyze.  If only the first 2 pvals are < 0.05 then only the first two LVs are significant, and only those will be analyzed.  You can copy the pvals and save them in a file, but they will also be saved in the .mat file output from PLS so you can check them later as well.  
+
+18. Plot PLS results
+The next step is to plot PLS results.  Typically, we could do this with matlab open rather quickly.  However since everything is remote the steps are instead to export results from your .mat file output from 17 to python format, then plot in python.  
+
+For each LV, there will be some (but not all) brain variables contributing and some (but not all) behaviour variables contributing.  Brain variables contributing are identified using the bootstrap ratio (BSR), and behav variables are identified using the 95% confidence interval (if the conf interval does not cross 0, we can confidently say the behav variable contributes in a non zero way). The methods section of the Zeighami paper explains this nicely i think.  
+
+In the .mat file are the needed variables to create these plots.  The script below can be modified to load in your pls results .mat file, get the necessary variables, and save htem in an organized way to another .mat file that will be loaded to python later.  Grab a copy of the scripts and modify as necessary (should just be modifying filenames/paths and , if necessary, copying chunks of text to repeat for LV3,4,.... And for right side results if needed)
+
+/data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/analysis/329subject_singleshellNMF/pls/4components_educ_noWM/sample_plsres_mat_to_python.m
+
+It can be run locally, with matlab:
+> matlab -nodisplay -nosplash -nodesktop -r "run('sample_plsres_mat_to_python.m');exit;"
+
+The following notebook contains code for plotting results of 1 lv, using the output of the sample_plsres_mat_to_python.m script.  Copy it and adjust as needed to try plotting results.  As it is a notebook, run this on your laptop - transfer over the .mat files necessary first of course.
+
+/data/chamal/projects/raihaan/projects/inprogress/hc-nmf-micro/analysis/329subject_singleshellNMF/pls/4components_educ_noWM/sample_plot_lv.ipynb
+
+The notebook contains code for plotting one lv, you can copy and paste and adjust as necessary to plot multiple LVs and results from the right side.  This should show you, for each significant lv, which brain and behav variables correlate with each other, allowing you to say things like 
+“In LV1, we found a pattern in which increased MD and decreased FA was correlated with increased age and poor performance on X task”
+
+
+
+
+
+
+
+
+19. Crop MNI model for Neurosynth
+To work with neurosynth, the labels will have to be in MNI space. (HCP data is *almost* in MNI space but not exact, so a registration is needed).  First, you’ll need to crop the MNI model in similar fashion to the template brain you’ve been working with - ie create a bounding box that includes a similar area of the brain. This does not have to be precise, but instead roughly equal is ok.
+
+Copy the MNI brain to your folder:
+/opt/quarantine/resources/mni_icbm152_nlin_sym_09c_minc2/mni_icbm152_t1_tal_nlin_sym_09c.mnc
+
+Load minc-toolkit. Using Display, crop the file.  If you open up the image in Display, navigate to the Volume Cropping menu (H).  Select Pick Crop Box (S) and a green box should appear at the bounds of the image. You should then be able to left click on a corner of the box and move it.  To select another corner, hit S again, left click the corner and move.  Repeat this (S -> adjust box, S -> adjust box, etc) until you are happy with the region selected.  Then in the Volume Cropping menu, select Set Crop Source (F). This will prompt you on the terminal to enter the name of the file you want to crop, type in the MNI filename then hit enter.  Then in the Volume Cropping menu, select Crop To File ( R). This should prompt you to enter the name of the new, cropped file. Type a filename, hit enter, then this should create that new file.  You can now quit Display.  Open up the newly created file, it should be the region you selected, but no background.
+
+Next, resample the new file so that it has the same bounds as original (ie so it has a background) using mincresample:
+> mincresample -like mnimodel.mnc croppedfile.mnc croppedfile_res.mnc
+
+Where mnimodel.mnc is the orig model, and croppedfile.mnc is the output from Display.  You can use the ‘register’ command to view the files side by side and make sure they are aligned:
+
+> register mnimodel.mnc croppedfile_res.mnc
+
+Convert the resulting file to nifti (mnc2nii, make sure minc-toolkit loaded)
+
+20. Register your HCP template to the cropped MNI model
+Use MAGeTBrain tools on Niagara to do this.  Upload both the HCP template and cropped mni model to Niagara.  You’ll use some registration scripts from MAGeTBrain (essentially ants registration tools), so clone the git repository:
+
+>  
+
+This should create a folder called antsRegistration-MAGeT, and the register script is antsRegistration-MAGeT/bin/mb_register.sh
+
+It is run as follows:
+> antsRegistration-MAGeT/bin/mb_register.sh $movingfile $fixedfile $outputdir
+
+So the following would work, replacing my variable names with whatever you have:
+> antsRegistration-MAGeT/bin/mb_register.sh hcpmodel.mnc mnicropped_resmodel.mnc outputdirectory
+
+Put the command into a joblist, and then you can submit it to the niagara cluster. Make sure to load appropriate modules first:
+> module load cobralab/2019b
+#create joblist
+> qbatch -w 2:00:00 joblist
+
+21. Run Neurosynth
+
+
+22. Sex-based analysis
+
+Seperate original group of 329 subjects by sex
+Redo input matrices
+Rerun multimodal OPNMF with 5 components
+Quantitatively/qualitatively check differences between the two decomposition and between the original decomposition
+
+
