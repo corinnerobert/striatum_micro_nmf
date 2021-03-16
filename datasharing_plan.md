@@ -38,7 +38,10 @@ The intermediate results / data outputs required to run the code released with t
 This will be the structure of the release:
 
 1. A flat folder containing the intermediate files
-    1. D1 input matrix (voxel by modality matrix). filename: XYZ.mat
+    1. D1 multimodal input matrix (voxel by modality matrix). filename: {leftstri or rightstri}_multimodal_input_matrix.mat
+    1.2 D2 T1w/T2w only input matrix (voxel by T1w/T2w). filename: {leftstri or rightstri}_t1t2_input_matrix.mat
+    1.3 D3 FA only input matrix (voxel by FA). filename: {leftstri or rightstri}_fa_input_matrix.mat
+    1.4 D4 MD only input matrix (voxel by MD). filename: {leftstri or rightstri}_md_input_matrix.mat
     2. D2 everything stability. filename: XYZ.mat
     3. D3 T1w/T2w stability: filename: XYZ.mat
     4. D4 FA stability. filename: XYZ.mat
