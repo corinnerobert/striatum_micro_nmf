@@ -48,6 +48,6 @@ This will be the structure of the release:
     5. D5 MD stability analysis results (.csv file with granularity-group pair as rows and mean/correlation/accuracy measures as columns). filename: {leftstri or rightstri}_md_stability_measures.csv
     6. D6 a .mat file with the labels. filename: XYZ.mat
     7. D7 a .mnc file with the volumetric representation of labels. filename: {leftstri or rightstri}_5clusters.nii.gz
-    8. D8 .mat file with PLS results. filename: XYZ.mat
+    8. D8 .mat file with PLS results. filename: {leftstri or rightstri}_pls_output.mat
 2. README.md
 3. LICENSE file
