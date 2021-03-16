@@ -42,7 +42,7 @@ This will be the structure of the release:
     1.2 D2 T1w/T2w only input matrix (voxel by T1w/T2w). filename: {leftstri or rightstri}_t1t2_input_matrix.mat
     1.3 D3 FA only input matrix (voxel by FA). filename: {leftstri or rightstri}_fa_input_matrix.mat
     1.4 D4 MD only input matrix (voxel by MD). filename: {leftstri or rightstri}_md_input_matrix.mat
-    2. D2 everything stability. filename: XYZ.mat
+    2. D2 Multimodal stability analysis results (.csv file with granularity-group pair as rows and mean/correlation/accuracy measures as columns). filename: {leftstri or rightstri}_multimodal_stability_measures.csv
     3. D3 T1w/T2w stability analysis results (.csv file with granularity-group pair as rows and mean/correlation/accuracy measures as columns). filename: {leftstri or rightstri}_t1t2_stability_measures.csv
     4. D4 FA stability analysis results (.csv file with granularity-group pair as rows and mean/correlation/accuracy measures as columns). filename: {leftstri or rightstri}_fa_stability_measures.csv
     5. D5 MD stability analysis results (.csv file with granularity-group pair as rows and mean/correlation/accuracy measures as columns). filename: {leftstri or rightstri}_md_stability_measures.csv
