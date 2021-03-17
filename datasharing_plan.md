@@ -39,15 +39,15 @@ This will be the structure of the release:
 
 1. A flat folder containing the intermediate files
     1. D1 multimodal input matrix (voxel by modality matrix). filename: {leftstri or rightstri}_multimodal_input_matrix.mat
-    1.2 D2 T1w/T2w only input matrix (voxel by T1w/T2w). filename: {leftstri or rightstri}_t1t2_input_matrix.mat
-    1.3 D3 FA only input matrix (voxel by FA). filename: {leftstri or rightstri}_fa_input_matrix.mat
-    1.4 D4 MD only input matrix (voxel by MD). filename: {leftstri or rightstri}_md_input_matrix.mat
-    2. D2 Multimodal stability analysis results (.csv file with granularity-group pair as rows and mean/correlation/accuracy measures as columns). filename: {leftstri or rightstri}_multimodal_stability_measures.csv
-    3. D3 T1w/T2w stability analysis results (.csv file with granularity-group pair as rows and mean/correlation/accuracy measures as columns). filename: {leftstri or rightstri}_t1t2_stability_measures.csv
-    4. D4 FA stability analysis results (.csv file with granularity-group pair as rows and mean/correlation/accuracy measures as columns). filename: {leftstri or rightstri}_fa_stability_measures.csv
-    5. D5 MD stability analysis results (.csv file with granularity-group pair as rows and mean/correlation/accuracy measures as columns). filename: {leftstri or rightstri}_md_stability_measures.csv
-    6. D6 a .mat file with the labels. filename: {leftstri or rightstri}_5components_matrix.mat
-    7. D7 a .mnc file with the volumetric representation of labels. filename: {leftstri or rightstri}_5clusters.nii.gz
-    8. D8 .mat file with PLS results. filename: {leftstri or rightstri}_pls_output.mat
+    2. D2 T1w/T2w only input matrix (voxel by T1w/T2w). filename: {leftstri or rightstri}_t1t2_input_matrix.mat
+    3. D3 FA only input matrix (voxel by FA). filename: {leftstri or rightstri}_fa_input_matrix.mat
+    4. D4 MD only input matrix (voxel by MD). filename: {leftstri or rightstri}_md_input_matrix.mat
+    5. D2 Multimodal stability analysis results (.csv file with granularity-group pair as rows and mean/correlation/accuracy measures as columns). filename: {leftstri or rightstri}_multimodal_stability_measures.csv
+    6. D3 T1w/T2w stability analysis results (.csv file with granularity-group pair as rows and mean/correlation/accuracy measures as columns). filename: {leftstri or rightstri}_t1t2_stability_measures.csv
+    7. D4 FA stability analysis results (.csv file with granularity-group pair as rows and mean/correlation/accuracy measures as columns). filename: {leftstri or rightstri}_fa_stability_measures.csv
+    8. D5 MD stability analysis results (.csv file with granularity-group pair as rows and mean/correlation/accuracy measures as columns). filename: {leftstri or rightstri}_md_stability_measures.csv
+    9. D6 a .mat file with the labels. filename: {leftstri or rightstri}_5components_matrix.mat
+    10. D7 a .mnc file with the volumetric representation of labels. filename: {leftstri or rightstri}_5clusters.nii.gz
+    11. D8 .mat file with PLS results. filename: {leftstri or rightstri}_pls_output.mat
 2. README.md
 3. LICENSE file
