@@ -30,7 +30,7 @@
             1. If data anlyzed only contain open-access data (e.g images ...):
                  - [ ] Share derivates, you may link individual datapoints to study-specific IDs ??
    1. ### Other
-       - [ ] Check data sharing and lcensing guidelines of the paper you want to submit to
+       - [ ] Check data sharing and licensing guidelines of the journal you want to submit to
        - [ ] Choose a License
             
 # elife data sharing checklist
