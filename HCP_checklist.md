@@ -12,11 +12,11 @@
 
         As you must know, any data used in your research that was not acquired by yourself or your coauthors needs to be acknowledge properly in the acknowledgment section, otherwise it constitutes a form of plagiarism. Hence, if you are using HCP data, in your acknowledgment section you need to write the following : "Data were provided [in part] by the Human Connectome Project, WU-Minn Consortium (Principal Investigators: David Van Essen and Kamil Ugurbil; 1U54MH091657) funded by the 16 NIH Institutes and Centers that support the NIH Blueprint for Neuroscience Research; and by the McDonnell Center for Systems Neuroscience at Washington University.". 
 
-        [comment]: <> (add license info here)
+        The HCP does not provided any clear licensing information, however, the shared HCP derivatives must be shared under the same same [Data Use Terms](https://www.humanconnectome.org/study/hcp-young-adult/document/wu-minn-hcp-consortium-open-access-data-use-terms) 
 
 1. ## Checklist
-    1. ### If your derivatives only used restricted HCP data
-    [comment]: <> (can you share everythin directly? or still need to make study-specific IDs?)
+    1. ### If your derivatives only used open-access HCP data
+            - [ ] Share under the same [Data Use Terms](https://www.humanconnectome.org/study/hcp-young-adult/document/wu-minn-hcp-consortium-open-access-data-use-terms)
     1.  ### If your derivatives used restricted HCP data
         1. For subject specific data/derivatives (**[open-access data](https://www.humanconnectome.org/study/hcp-young-adult/document/quick-reference-open-access-vs-restricted-data) or family-structure only**): 
             - [ ] Make study specific IDs
@@ -25,10 +25,21 @@
         1. For multiple-subject derivatives:
             1. If data analyzed with [Additional Restricted Data elements](https://www.humanconnectome.org/study/hcp-young-adult/document/wu-minn-hcp-consortium-restricted-data-use-terms)
                  - [ ] Check if derivatives contain at least 3 subjects
-                 - [ ] Remove study-specific IDs link to individual data points
+                 - [ ] Remove study-specific IDs link to individual data points (subjects)
                  - [ ] Share derivatives
-            1. Id data anlyzed only contain open-access data (e.g images ...):
-                - [ ] Share derivates, you may link individual datapoints to study-specific IDs 
+            1. If data anlyzed only contain open-access data (e.g images ...):
+                - [ ] Share derivates, you may link individual datapoints to study-specific IDs ??
+    1. ### Other
+           - [ ] Check the data sharing/Licensing guidelines of the paper you want to submit to
+           - [ ] Choose a License
+            
+# elife data sharing checklist
+elife guidelines states that the necessary program code, scripts for statistical package must be provided and sufficiently documented so that another informed researcher may replicates all published findings. 
 
-
+elife recommends to publish only materials that can be reproduce under a [Creative Commons Attribution License](https://creativecommons.org/licenses/by/4.0/).
+    1. ## Checklist
+        - [ ] Share HCP derivatives as planned 
+        - [ ] Edit and comment code so that anyone can replicate most of the figures
+        - [ ] Maybe add documentation on how to run Neurosynth on our collection shared on Neurovault
+        - [ ] Choose a license
         
