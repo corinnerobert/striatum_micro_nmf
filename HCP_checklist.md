@@ -16,7 +16,7 @@
 
 1. ## Checklist
     1. ### If your derivatives only used open-access HCP data
-            - [ ] Share under the same [Data Use Terms](https://www.humanconnectome.org/study/hcp-young-adult/document/wu-minn-hcp-consortium-open-access-data-use-terms)
+       - [ ] Share under the same [Data Use Terms](https://www.humanconnectome.org/study/hcp-young-adult/document/wu-minn-hcp-consortium-open-access-data-use-terms)
     1.  ### If your derivatives used restricted HCP data
         1. For subject specific data/derivatives (**[open-access data](https://www.humanconnectome.org/study/hcp-young-adult/document/quick-reference-open-access-vs-restricted-data) or family-structure only**): 
             - [ ] Make study specific IDs
@@ -28,18 +28,17 @@
                  - [ ] Remove study-specific IDs link to individual data points (subjects)
                  - [ ] Share derivatives
             1. If data anlyzed only contain open-access data (e.g images ...):
-                - [ ] Share derivates, you may link individual datapoints to study-specific IDs ??
-    1. ### Other
-           - [ ] Check the data sharing/Licensing guidelines of the paper you want to submit to
-           - [ ] Choose a License
+                 - [ ] Share derivates, you may link individual datapoints to study-specific IDs ??
+   1. ### Other
+       - [ ] Check data sharing and lcensing guidelines of the paper you want to submit to
+       - [ ] Choose a License
             
 # elife data sharing checklist
 elife guidelines states that the necessary program code, scripts for statistical package must be provided and sufficiently documented so that another informed researcher may replicates all published findings. 
 
 elife recommends to publish only materials that can be reproduce under a [Creative Commons Attribution License](https://creativecommons.org/licenses/by/4.0/).
-    1. ## Checklist
-        - [ ] Share HCP derivatives as planned 
-        - [ ] Edit and comment code so that anyone can replicate most of the figures
-        - [ ] Maybe add documentation on how to run Neurosynth on our collection shared on Neurovault
-        - [ ] Choose a license
-        
+  1. ## Checklist
+       - [ ] Share HCP derivatives as planned 
+      - [ ] Edit and comment code so that anyone can replicate most of the figures
+      - [ ] Maybe add documentation on how to run Neurosynth on our collection shared on Neurovault
+      - [ ] Choose a license       
