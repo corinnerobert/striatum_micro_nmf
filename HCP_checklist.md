@@ -1,4 +1,6 @@
 # HCP data sharing checklist
+Author: (Corinne Roberts)[mailto:corinne.robert@mail.mcgill.ca]
+
 ## Summary
 ### Open-access data use terms
 
