@@ -23,7 +23,7 @@ The HCP does not provided any clear licensing information, however, the shared H
 | Restricted data / individual results | yes (individual) | no (average) | 
 |--------------------------------------|-----|----|
 | yes (restricted)                                  |  cannot share restricted data under any circumstances (except for family structure)  |  make sure restricted data are averaged across at least 3 subjects  | 
-| no (open)                                  |  create study specific IDs to share open data (???)   |  report away  | 
+| no (open)                                  |  create study specific IDs to share open data   |  report away  | 
 
 ### If your derivatives only used open-access HCP data
 - [ ] Share under the same [Data Use Terms](https://www.humanconnectome.org/study/hcp-young-adult/document/wu-minn-hcp-consortium-open-access-data-use-terms)
@@ -41,7 +41,7 @@ The HCP does not provided any clear licensing information, however, the shared H
         - [ ] Remove study-specific IDs link to individual data points (subjects)
         - [ ] Share derivatives
     2. If data anlyzed only contain open-access data (e.g images ...):
-        - [ ] Share derivates, you may link individual datapoints to study-specific IDs ??
+        - [ ] Share derivates, you may link individual datapoints to study-specific IDs
    1. ### Other
        - [ ] Check data sharing and licensing guidelines of the journal you want to submit to
        - [ ] Choose a License
