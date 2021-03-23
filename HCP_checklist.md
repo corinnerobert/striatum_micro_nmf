@@ -20,7 +20,11 @@ As you must know, any data used in your research that was not acquired by yourse
 The HCP does not provided any clear licensing information, however, the shared HCP derivatives must be shared under the same same [Data Use Terms](https://www.humanconnectome.org/study/hcp-young-adult/document/wu-minn-hcp-consortium-open-access-data-use-terms) 
 
 ## Checklist
-There are two cases:
+| Restricted data / individual results | yes (individual) | no (average) | 
+|--------------------------------------|-----|----|
+| yes (restricted)                                  |  cannot share restricted data under any circumstances (except for family structure)  |  make sure restricted data are averaged across at least 3 subjects  | 
+| no (open)                                  |  create study specific IDs to share open data (???)   |  report away  | 
+
 ### If your derivatives only used open-access HCP data
 - [ ] Share under the same [Data Use Terms](https://www.humanconnectome.org/study/hcp-young-adult/document/wu-minn-hcp-consortium-open-access-data-use-terms)
 
