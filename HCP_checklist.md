@@ -30,7 +30,7 @@ There are two cases:
     - [ ] Link your study-specific IDs to the HCP IDs with a [Subject key](https://www.humanconnectome.org/study/hcp-young-adult/document/creating-and-using-subject-keys-connectomedb)
     - [ ] Share subject specific data with study-specific IDs 
 
-1. For multiple-subject derivatives:
+1. For multi-subject summary statistics:
     1. If data analyzed with [Additional Restricted Data elements](https://www.humanconnectome.org/study/hcp-young-adult/document/wu-minn-hcp-consortium-restricted-data-use-terms)
         - [ ] Check if derivatives contain at least 3 subjects
         - [ ] Remove study-specific IDs link to individual data points (subjects)
