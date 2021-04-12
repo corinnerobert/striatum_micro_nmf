@@ -4,13 +4,12 @@ import numpy as np
 import scipy.io
 from sklearn.metrics.pairwise import cosine_similarity
 
-
 n_subjects = 329
 n_splits = 10
 max_gran = 10
 
 #output directory where the stability results go
-out_dir = "../output/stability_out/leftn" + str(n_splits) + "/" 
+out_dir = "../output/stability_out/rightn" + str(n_splits) + "/" 
 if not os.path.exists(out_dir):
        os.makedirs(out_dir)
 
@@ -19,10 +18,10 @@ cols = ["Granularity","Iteration","Euclidean_mean","Euclidean_median","Euclidean
 df = pd.DataFrame(columns = cols) #initiate dataframe
 
 #location of the opnmf results (.mat files) for each split
-stab_dir = "../data/stability_analysis_inputs/leftstri" #MODIFY 
+stab_dir = "../data/stability_analysis_inputs/rightstri" #MODIFY 
 
 
-#LEFT STRI STABILITY
+#right STRI STABILITY
 #this loop computes spatial stability for each split, for each granularity
 #results are stored in a .csv file that is written to your out_dir variable
 for i in range(1,n_splits):
@@ -65,11 +64,11 @@ for i in range(1,n_splits):
         df_curr = pd.DataFrame(data = [[g, i+1, np.mean(euclid_dist), np.median(euclid_dist),np.std(euclid_dist),
                                         np.mean(cosine_dist), np.median(cosine_dist),np.std(cosine_dist),np.mean(corr),np.median(corr),np.std(corr),ea,eb]], columns = cols)
         df = df.append(df_curr) #append the 1 row df to the full df -> this becomes 1 row longer each loop iteration
-        df.to_csv(out_dir + 'temppnmf_cosine-sim_lefthc_corr.csv') #each loop iteration, write out a temp output file. not really necessary, remove if you like
+        df.to_csv(out_dir + 'temppnmf_cosine-sim_righthc_corr.csv') #each loop iteration, write out a temp output file. not really necessary, remove if you like
         del Wa,Wb,ea,eb,resA,resB
     
 
 #write out the full df containing the similarity metrics for each granularity, for each split
 #should be (n_granularities * n_splits) + 1 rows
-df.to_csv(out_dir + 'leftstri_multimodal_stability_measures.csv') #MODIFY
+df.to_csv(out_dir + 'rightstri_multimodal_stability_measures.csv') #MODIFY
 del df, df_curr
