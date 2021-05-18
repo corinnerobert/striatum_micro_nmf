@@ -65,7 +65,49 @@ for g in range(0,8):
     #print(df_errorgrad.loc[df_errorgrad['Granularity'] == g+3])
     error_grad_arr[0,g] = np.mean(df_errorgrad.loc[df_errorgrad['Granularity'] == g+3].values[0,:])
     error_grad_std_arr[0,g] = np.std(df_errorgrad.loc[df_errorgrad['Granularity'] == g+3].values[0,:])
+# PLOT multimodal graph with gradient reconstruction error
+t = np.arange(2,11)
+tt = np.arange(3,11)
+fig, ax1 = plt.subplots(figsize=(10, 6), dpi=500)
+ax1.set_frame_on(False)
+major_ticks = np.arange(0.2, 1, 0.1)
+minor_ticks = np.arange(0.4, 1, 0.1)
+ax1.set_yticks(major_ticks)
+ax1.set_yticks(minor_ticks, minor=True)
+ax1.grid(which='both', color='#CCCCCC')
 
+color = 'tab:red'
+ax1.set_xlabel('Number of Components', fontsize = 25, labelpad = 20)
+ax1.set_ylabel('Stability Coefficient', color=color, fontsize = 25)
+ax1.errorbar(t,plt_arr.flatten(),yerr=plt_std_arr.flatten(), c=color, marker=".", ms=12, lw = 2.5)
+
+ax1.tick_params(axis='y', labelcolor=color, labelsize=20, pad = 10)
+ax1.tick_params(axis='x', labelsize=20)
+ax1.set_ylim(0.2,1)
+ax1.set_xlim(1.5,10)
+ax1.set_facecolor('white')
+
+
+ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+major_ticks = np.arange(-300, 0, 75)
+minor_ticks = np.arange(-125, 0, 15.62)
+ax2.set_yticks(major_ticks)
+#ax2.set_yticks(minor_ticks, minor=True)
+ax2.grid(which='both', color='#CCCCCC')
+ax2.set_ylim(-300,0)
+color = 'tab:blue'
+ax2.set_ylabel('Gradient(Reconstruction Error)', color=color, fontsize = 20)  # we already handled the x-label with ax1
+
+ax2.errorbar(tt,error_grad_arr.flatten(),yerr=error_grad_std_arr.flatten(), c=color, marker=".", ms = 12, lw = 2.5)
+
+ax2.tick_params(axis='y', labelcolor=color, labelsize=10, pad = 10)
+ax2.set_xlim(1.5,10)
+ax2.set_frame_on(False)
+fig.tight_layout()  # otherwise the right y-label is slightly clipped
+
+
+plt.title('Right Stri - Multimodal Stability and Error', fontsize=25)
+plt.savefig('../output/stability_out/rightstri_multimodal_stability.png', bbox_inches='tight', dpi = 'figure')
 #right stri UNIMODAL T1T2
 #Corr
 
@@ -234,23 +276,23 @@ ax1.set_yticks(major_ticks)
 ax1.set_yticks(minor_ticks, minor=True)
 ax1.grid(which='both', color='#CCCCCC')
 
-color = 'tab:red'
+color = 'black'
 ax1.set_xlabel('Number of Components', fontsize = 25, labelpad = 20)
 ax1.set_ylabel('Stability Coefficient', color=color, fontsize = 25)
-ax1.errorbar(t,plt_arr.flatten(),yerr=plt_std_arr.flatten(), c=color, marker=".", ms=12, lw = 2.5, label='Multimodal')
-
 ax1.tick_params(axis='y', labelcolor=color, labelsize=20, pad = 10)
 ax1.tick_params(axis='x', labelsize=20)
 ax1.set_ylim(0.05,1)
 ax1.set_xlim(1.4,10)
 ax1.set_facecolor('white')
+color = 'tab:red'
+ax1.errorbar(t,plt_arr.flatten(),yerr=plt_std_arr.flatten(), c=color, marker=".", ms=12, lw = 2.5, label='Multimodal')
 #ax1.annotate("Multimodal",(2.2, 0.90), color=color, fontsize = 15,fontweight = 2.5)
 
 #PLOT UNIMODAL T1T2
 
 ax3=ax1.twinx()
 ax3.grid(which='both', color='#CCCCCC')
-
+ax3.set_frame_on(False)
 color = 'tab:green'
 ax3.errorbar(t,plt_arr_T1T2.flatten(),yerr=plt_std_arr_T1T2.flatten(), c=color, marker=".", ms=12, lw = 2.5, label='T1T2')
 ax3.set_ylim(0.05,1)
@@ -262,7 +304,7 @@ ax3.get_yaxis().set_visible(False)
 #PlOT UNIMODAL FA
 ax4=ax1.twinx()
 ax4.grid(which='both', color='#CCCCCC')
-
+ax4.set_frame_on(False)
 color = 'black'
 ax4.errorbar(t,plt_arr_FA.flatten(),yerr=plt_std_arr_FA.flatten(), c=color, marker=".", ms=12, lw = 2.5, label='FA')
 ax4.set_ylim(0.05,1)
@@ -275,7 +317,7 @@ fig.tight_layout()  # otherwise the right y-label is slightly clipped
 #PlOT UNIMODAL MD
 ax5=ax1.twinx()
 ax5.grid(which='both', color='#CCCCCC')
-
+ax5.set_frame_on(False)
 color = 'tab:blue'
 ax5.errorbar(t,plt_arr_MD.flatten(),yerr=plt_std_arr_MD.flatten(), c=color, marker=".", ms=12, lw = 2.5,label='MD')
 ax5.set_ylim(0.05,1)
@@ -291,5 +333,5 @@ legend = fig.legend(bbox_to_anchor=(0.67, 0.9, 0.3, .10), loc='upper right',
 fig.tight_layout()  # otherwise the right y-label is slightly clipped
 plt.text(0.98,1.09,'Right Stri - Multimodal vs. Unimodal Stability', fontsize=25)
 plt.savefig('../output/stability_out/rightstri_stability_unimodal_vs_multimodal.png', bbox_inches='tight', dpi = 'figure')
-plt.show()
+
 
